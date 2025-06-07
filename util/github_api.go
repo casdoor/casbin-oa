@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/astaxie/beego"
@@ -204,4 +205,63 @@ func GetOrgMembers(org string) map[string]bool {
 	}
 
 	return membersMap
+}
+
+func GetOrgStarsStatistics(org string) (int, int) {
+	client := GetClient()
+
+	type RepoInfo struct {
+		Name  string
+		Stars int
+	}
+	var repos []RepoInfo
+	totalStars := 0
+
+	curPage := 1
+	options := github.RepositoryListByOrgOptions{
+		ListOptions: github.ListOptions{Page: curPage, PerPage: 100},
+		Type:        "public",
+	}
+
+	for {
+		repoList, resp, err := client.Repositories.ListByOrg(context.Background(), org, &options)
+		if err != nil {
+			fmt.Printf("Error fetching repositories: %v\n", err)
+			return 0, 0
+		}
+
+		for _, repo := range repoList {
+			if repo.StargazersCount != nil {
+				repos = append(repos, RepoInfo{
+					Name:  repo.GetName(),
+					Stars: repo.GetStargazersCount(),
+				})
+				totalStars += repo.GetStargazersCount()
+			}
+		}
+
+		if resp.NextPage == 0 {
+			break
+		}
+		options.Page = resp.NextPage
+	}
+
+	sort.Slice(repos, func(i, j int) bool {
+		return repos[i].Stars > repos[j].Stars
+	})
+
+	fmt.Printf("=== %s Organization Repository Stars ===\n", org)
+	for i, repo := range repos {
+		fmt.Printf("%3d. %-40s: %6d stars\n", i+1, repo.Name, repo.Stars)
+	}
+
+	fmt.Printf("\n=== Statistics ===\n")
+	fmt.Printf("Total repositories: %d\n", len(repos))
+	fmt.Printf("Total stars: %d\n", totalStars)
+	if len(repos) > 0 {
+		avgStars := float64(totalStars) / float64(len(repos))
+		fmt.Printf("Average stars per repo: %.2f\n", avgStars)
+	}
+
+	return len(repos), totalStars
 }
