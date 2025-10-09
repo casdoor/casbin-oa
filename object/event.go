@@ -96,7 +96,11 @@ func GetEvents(author string, orgMap map[string]bool, startDate time.Time, endDa
 
 		if *curEvent.Type == "PullRequestEvent" {
 			var payLoad PayLoad
-			json.Unmarshal(*curEvent.RawPayload, &payLoad)
+			err = json.Unmarshal(*curEvent.RawPayload, &payLoad)
+			if err != nil {
+				panic(err)
+			}
+
 			request := payLoad.PullRequest
 			state := GetPRState(orgName, repoName, request.GetNumber())
 			_, ok := prMap[*request.HTMLURL]
@@ -110,7 +114,11 @@ func GetEvents(author string, orgMap map[string]bool, startDate time.Time, endDa
 
 		} else if *curEvent.Type == "IssueCommentEvent" {
 			var payLoad PayLoad
-			json.Unmarshal(*curEvent.RawPayload, &payLoad)
+			err = json.Unmarshal(*curEvent.RawPayload, &payLoad)
+			if err != nil {
+				panic(err)
+			}
+
 			comment := payLoad.Comment
 			issue := payLoad.Issue
 			body := *comment.Body
@@ -130,7 +138,11 @@ func GetEvents(author string, orgMap map[string]bool, startDate time.Time, endDa
 			authorEvents = append(authorEvents, &event)
 		} else if *curEvent.Type == "PullRequestReviewEvent" {
 			var payLoad PayLoad
-			json.Unmarshal(*curEvent.RawPayload, &payLoad)
+			err = json.Unmarshal(*curEvent.RawPayload, &payLoad)
+			if err != nil {
+				panic(err)
+			}
+
 			pr := payLoad.PullRequest
 			if *pr.User.Login == author {
 				continue
