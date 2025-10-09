@@ -102,14 +102,37 @@ func GetEvents(author string, orgMap map[string]bool, startDate time.Time, endDa
 			}
 
 			request := payLoad.PullRequest
-			state := GetPRState(orgName, repoName, request.GetNumber())
-			_, ok := prMap[*request.HTMLURL]
+			prNumber := request.GetNumber()
+			pr, _, err := client.PullRequests.Get(context.Background(), orgName, repoName, prNumber)
+			if err != nil {
+				panic(err)
+			}
+
+			state := pr.GetState()
+			if pr.MergedAt != nil {
+				state = "Merged"
+			} else if pr.GetDraft() && pr.GetState() == "open" {
+				state = "Draft"
+			}
+
+			htmlURL := pr.GetHTMLURL()
+			_, ok := prMap[htmlURL]
 			if ok {
 				continue
 			} else {
-				prMap[*request.HTMLURL] = true
+				prMap[htmlURL] = true
 			}
-			event := Event{Type: "PR", Title: *request.Title, HtmlURL: *request.HTMLURL, CreateAt: Date, State: state, OrgName: orgName, RepoName: repoName, Number: *request.Number}
+
+			event := Event{
+				Type:     "PR",
+				Title:    pr.GetTitle(),
+				HtmlURL:  htmlURL,
+				CreateAt: Date,
+				State:    state,
+				OrgName:  orgName,
+				RepoName: repoName,
+				Number:   prNumber,
+			}
 			authorEvents = append(authorEvents, &event)
 
 		} else if *curEvent.Type == "IssueCommentEvent" {
@@ -144,7 +167,14 @@ func GetEvents(author string, orgMap map[string]bool, startDate time.Time, endDa
 			}
 
 			pr := payLoad.PullRequest
-			if *pr.User.Login == author {
+
+			prNumber := pr.GetNumber()
+			fullPR, _, err := client.PullRequests.Get(context.Background(), orgName, repoName, prNumber)
+			if err != nil {
+				panic(err)
+			}
+
+			if fullPR.User != nil && *fullPR.User.Login == author {
 				continue
 			}
 			review := payLoad.Review
@@ -157,7 +187,7 @@ func GetEvents(author string, orgMap map[string]bool, startDate time.Time, endDa
 				reviewMap[reviewURL] = true
 			}
 
-			event := Event{Type: "CodeReview", HtmlURL: reviewURL, CreateAt: Date, OrgName: orgName, RepoName: repoName, Number: *pr.Number}
+			event := Event{Type: "CodeReview", HtmlURL: reviewURL, CreateAt: Date, OrgName: orgName, RepoName: repoName, Number: prNumber}
 			authorEvents = append(authorEvents, &event)
 		}
 
