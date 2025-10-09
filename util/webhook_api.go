@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/google/go-github/v38/github"
+	"github.com/google/go-github/v74/github"
 )
 
 func GetOrgWebhooks(org string) []*github.Hook {

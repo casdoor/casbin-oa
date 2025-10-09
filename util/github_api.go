@@ -23,7 +23,7 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/casbin/casbin-oa/proxy"
-	"github.com/google/go-github/v38/github"
+	"github.com/google/go-github/v74/github"
 	"golang.org/x/oauth2"
 )
 
@@ -76,18 +76,20 @@ func SetIssueAssignee(owner string, repo string, number int, assignee string) bo
 }
 
 func AddIssueToProjectCard(cardId int64, issueId int64) bool {
-	client := GetClient()
-	cardOption := github.ProjectCardOptions{ContentType: "Issue", ContentID: issueId}
-	projects := client.Projects
-	_, response, err := projects.CreateProjectCard(context.Background(), cardId, &cardOption)
-	if err != nil {
-		return false
-	}
-
-	if response.StatusCode == 200 {
-		return true
-	}
 	return false
+
+	//client := GetClient()
+	//cardOption := github.ProjectCardOptions{ContentType: "Issue", ContentID: issueId}
+	//projects := client.Projects
+	//_, response, err := projects.CreateProjectCard(context.Background(), cardId, &cardOption)
+	//if err != nil {
+	//	return false
+	//}
+	//
+	//if response.StatusCode == 200 {
+	//	return true
+	//}
+	//return false
 }
 
 func Comment(commentStr string, org string, repo string, number int) bool {
@@ -140,15 +142,19 @@ func GetIssueLabel(title string, content string) string {
 	return "question"
 }
 
-func GetProjectColumns(projectId int64) []*github.ProjectColumn {
-	client := GetClient()
-	projects := client.Projects
-	columns, _, err := projects.ListProjectColumns(context.Background(), projectId, nil)
-	if err != nil {
-		panic(err)
-	}
+//func GetProjectColumns(projectId int64) []*github.ProjectColumn {
+//	client := GetClient()
+//	projects := client.Projects
+//	columns, _, err := projects.ListProjectColumns(context.Background(), projectId, nil)
+//	if err != nil {
+//		panic(err)
+//	}
+//
+//	return columns
+//}
 
-	return columns
+func GetProjectColumns(projectId int64) []string {
+	return nil
 }
 
 func GetUserByUsername(githubUsername string) *github.User {

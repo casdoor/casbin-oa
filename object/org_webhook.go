@@ -16,7 +16,7 @@ package object
 
 import (
 	"github.com/casbin/casbin-oa/util"
-	"github.com/google/go-github/v38/github"
+	"github.com/google/go-github/v74/github"
 	"github.com/mileusna/crontab"
 )
 

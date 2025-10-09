@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/casbin/casbin-oa/util"
-	"github.com/google/go-github/v38/github"
+	"github.com/google/go-github/v74/github"
 )
 
 type Event struct {

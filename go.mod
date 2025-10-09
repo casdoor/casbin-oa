@@ -8,7 +8,7 @@ require (
 	github.com/casdoor/casdoor-go-sdk v0.32.0
 	github.com/chromedp/chromedp v0.7.6
 	github.com/go-sql-driver/mysql v1.5.0
-	github.com/google/go-github/v38 v38.0.0
+	github.com/google/go-github/v74 v74.0.0
 	github.com/melbahja/goph v1.2.1
 	github.com/mileusna/crontab v1.0.1
 	golang.org/x/crypto v0.14.0
@@ -31,7 +31,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
-	github.com/google/go-querystring v1.0.0 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
