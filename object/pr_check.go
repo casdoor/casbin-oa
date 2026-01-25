@@ -80,15 +80,16 @@ func UpdatePrCheck(id int, prCheck *PrCheck) bool {
 	return true
 }
 
-// IncrementFixAttempts increments the fix attempts counter
-func IncrementFixAttempts(org string, repo string, prNumber int, checkName string) bool {
+// IncrementFixAttempts increments the fix attempts counter and returns the updated record
+func IncrementFixAttempts(org string, repo string, prNumber int, checkName string) *PrCheck {
 	prCheck := GetPrCheck(org, repo, prNumber, checkName)
 	if prCheck == nil {
-		return false
+		return nil
 	}
 	prCheck.FixAttempts++
 	prCheck.LastAttemptAt = time.Now()
-	return UpdatePrCheck(prCheck.Id, prCheck)
+	UpdatePrCheck(prCheck.Id, prCheck)
+	return prCheck
 }
 
 // MarkAsFixed marks a check as fixed

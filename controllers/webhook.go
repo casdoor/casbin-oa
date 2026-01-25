@@ -33,7 +33,7 @@ func (c *ApiController) WebhookOpen() {
 	// Try to parse as different event types
 	eventType := c.Ctx.Request.Header.Get("X-GitHub-Event")
 
-	var result bool
+	result := false
 	switch eventType {
 	case "check_run":
 		err := json.Unmarshal(c.Ctx.Input.RequestBody, &checkRunEvent)
@@ -214,11 +214,8 @@ func HandleCheckRunEvent(event github.CheckRunEvent) bool {
 			object.UpdatePrCheck(prCheck.Id, prCheck)
 		}
 
-		// Increment fix attempts
-		object.IncrementFixAttempts(owner, repo, prNumber, checkName)
-
-		// Get updated record
-		prCheck = object.GetPrCheck(owner, repo, prNumber, checkName)
+		// Increment fix attempts and get updated record
+		prCheck = object.IncrementFixAttempts(owner, repo, prNumber, checkName)
 		if prCheck != nil {
 			// Comment on PR with failure details and tag copilot
 			go util.CommentOnPRWithCopilotTag(owner, repo, prNumber, prCheck.FailureReason, prCheck.FixAttempts)
@@ -304,11 +301,8 @@ func HandleCheckSuiteEvent(event github.CheckSuiteEvent) bool {
 				object.AddPrCheck(prCheck)
 			}
 
-			// Increment fix attempts
-			object.IncrementFixAttempts(owner, repo, prNumber, checkName)
-
-			// Get updated record
-			prCheck = object.GetPrCheck(owner, repo, prNumber, checkName)
+			// Increment fix attempts and get updated record
+			prCheck = object.IncrementFixAttempts(owner, repo, prNumber, checkName)
 			if prCheck != nil {
 				go util.CommentOnPRWithCopilotTag(owner, repo, prNumber, prCheck.FailureReason, prCheck.FixAttempts)
 			}
