@@ -78,6 +78,14 @@ The system recognizes the following linter check patterns:
 - `clippy`, `checkstyle`, `pmd`, `spotbugs`
 - `style`, `format`
 
+### Configuration Constants
+
+The following constants can be modified in `util/check_api.go`:
+
+- `MaxCheckFailureTextLength`: Maximum length of failure text in comments (default: 500)
+- `CopilotUsername`: GitHub username of the copilot bot (default: "copilot")
+- `MaxFixAttempts`: Maximum number of fix attempts per check (default: 3)
+
 ## API Endpoints
 
 ### Get PR Checks
@@ -168,17 +176,19 @@ GET /api/get-pr-check?org=<org>&repo=<repo>&prNumber=<number>&checkName=<name>
 
 ## Limitations
 
-1. The copilot username is currently hardcoded as "copilot" (can be made configurable)
+1. The copilot username can be configured via the `CopilotUsername` constant in `util/check_api.go`
 2. Only linter checks are monitored (build/test failures are ignored)
 3. The system requires proper GitHub webhook configuration
 4. GitHub API rate limits may affect functionality in high-traffic scenarios
+5. Maximum fix attempts can be configured via the `MaxFixAttempts` constant
 
 ## Future Enhancements
 
 Potential improvements:
-- Configurable copilot username via configuration file
-- Support for custom linter check patterns
+- Load configuration constants from configuration file instead of code
+- Support for custom linter check patterns via configuration
 - Dashboard UI for monitoring PR checks
 - Notifications for exceeded retry limits
 - Integration with Slack/Discord for notifications
 - Support for multiple copilot bots
+- Webhook signature verification for security

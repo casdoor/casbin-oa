@@ -22,6 +22,15 @@ import (
 	"github.com/google/go-github/v74/github"
 )
 
+const (
+	// MaxCheckFailureTextLength is the maximum length of failure text to include in comments
+	MaxCheckFailureTextLength = 500
+	// CopilotUsername is the GitHub username of the copilot bot
+	CopilotUsername = "copilot"
+	// MaxFixAttempts is the maximum number of fix attempts for a failing check
+	MaxFixAttempts = 3
+)
+
 // GetPRCheckRuns retrieves all check runs for a specific commit SHA
 func GetPRCheckRuns(owner string, repo string, ref string) ([]*github.CheckRun, error) {
 	client := GetClient()
@@ -85,8 +94,8 @@ func GetCheckFailureDetails(checkRun *github.CheckRun) string {
 		if checkRun.Output.Text != nil {
 			text := checkRun.Output.GetText()
 			// Limit the text to avoid too long messages
-			if len(text) > 500 {
-				text = text[:500] + "...(truncated)"
+			if len(text) > MaxCheckFailureTextLength {
+				text = text[:MaxCheckFailureTextLength] + "...(truncated)"
 			}
 			details.WriteString(fmt.Sprintf("Details: %s\n", text))
 		}
@@ -97,16 +106,14 @@ func GetCheckFailureDetails(checkRun *github.CheckRun) string {
 
 // CommentOnPRWithCopilotTag comments on a PR and tags the copilot for fixing
 func CommentOnPRWithCopilotTag(owner string, repo string, prNumber int, failureDetails string, attemptNumber int) error {
-	copilotUsername := "copilot" // This can be configurable
-
 	commentBody := fmt.Sprintf(`@%s The CI check has failed. Please help fix the following issue:
 
-**Attempt**: %d/3
+**Attempt**: %d/%d
 
 **Failure Details**:
 %s
 
-Please investigate and fix this issue.`, copilotUsername, attemptNumber, failureDetails)
+Please investigate and fix this issue.`, CopilotUsername, attemptNumber, MaxFixAttempts, failureDetails)
 
 	success := Comment(commentBody, owner, repo, prNumber)
 	if !success {
@@ -117,10 +124,8 @@ Please investigate and fix this issue.`, copilotUsername, attemptNumber, failure
 
 // RequestCopilotReview requests a review from copilot on a PR
 func RequestCopilotReview(owner string, repo string, prNumber int) error {
-	copilotUsername := "copilot" // This can be configurable
-
 	// First, comment to notify about the review request
-	commentBody := fmt.Sprintf(`@%s Please review this PR.`, copilotUsername)
+	commentBody := fmt.Sprintf(`@%s Please review this PR.`, CopilotUsername)
 	success := Comment(commentBody, owner, repo, prNumber)
 	if !success {
 		return fmt.Errorf("failed to post review request comment on PR #%d", prNumber)
@@ -128,7 +133,7 @@ func RequestCopilotReview(owner string, repo string, prNumber int) error {
 
 	// Try to request reviewer (may fail if copilot is not a collaborator)
 	// We ignore errors here as the comment is the primary notification
-	_ = RequestReviewers(owner, repo, prNumber, []string{copilotUsername})
+	_ = RequestReviewers(owner, repo, prNumber, []string{CopilotUsername})
 
 	return nil
 }

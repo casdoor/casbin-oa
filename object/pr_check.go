@@ -17,6 +17,8 @@ package object
 import (
 	"fmt"
 	"time"
+
+	"github.com/casbin/casbin-oa/util"
 )
 
 type PrCheck struct {
@@ -100,13 +102,13 @@ func MarkAsFixed(org string, repo string, prNumber int, checkName string) bool {
 	return UpdatePrCheck(prCheck.Id, prCheck)
 }
 
-// ShouldAttemptFix checks if we should attempt to fix this check (max 3 attempts)
+// ShouldAttemptFix checks if we should attempt to fix this check (max attempts configurable)
 func ShouldAttemptFix(org string, repo string, prNumber int, checkName string) bool {
 	prCheck := GetPrCheck(org, repo, prNumber, checkName)
 	if prCheck == nil {
 		return true // First time, should attempt
 	}
-	return prCheck.FixAttempts < 3 && !prCheck.IsFixed
+	return prCheck.FixAttempts < util.MaxFixAttempts && !prCheck.IsFixed
 }
 
 // GetFailureReason returns a formatted failure reason for display
