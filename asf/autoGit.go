@@ -213,7 +213,7 @@ func processRepo(repo string) error {
 		return err
 	}
 
-	if err := runCmd(localPath, "git", "add", "."); err != nil {
+	if err := runCmd(localPath, "git", "add", filepath.Base(configFile)); err != nil {
 		return err
 	}
 
