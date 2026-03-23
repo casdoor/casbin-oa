@@ -1,6 +1,8 @@
-package object
+package asf
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestRun(t *testing.T) {
 	RunAutoGitAddFile()

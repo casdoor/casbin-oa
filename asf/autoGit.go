@@ -1,4 +1,4 @@
-package object
+package asf
 
 import (
 	"bufio"
@@ -122,7 +122,12 @@ func fetchRepos() {
 
 func RunAutoGitAddFile() {
 
-	fetchRepos()
+	if _, err := os.Stat(repoListFile); os.IsNotExist(err) {
+		fmt.Println("📥 repos.txt not found, fetching repos...")
+		fetchRepos()
+	} else {
+		fmt.Println("📄 repos.txt already exists, skip fetching.")
+	}
 
 	os.MkdirAll(cloneBaseDir, os.ModePerm)
 
