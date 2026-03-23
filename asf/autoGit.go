@@ -219,7 +219,7 @@ func processRepo(repo string) error {
 
 	runCmd(localPath, "git", "commit", "-m", commitMsg)
 
-	if err := runCmd(localPath, "git", "push"); err != nil {
+	if err := runCmd(localPath, "git", "push", "origin", "HEAD"); err != nil {
 		return err
 	}
 
