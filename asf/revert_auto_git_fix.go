@@ -14,7 +14,7 @@ import (
 
 const (
 	fixStateFile  = "fix_state.json"
-	wrongRepoFile = "wrongCommits.txt"
+	wrongRepoFile = "revert_wrong_commits.txt"
 )
 
 type FixState struct {
