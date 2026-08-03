@@ -40,10 +40,9 @@ func GetEvents(author string, orgMap map[string]bool, startDate time.Time, endDa
 	client := util.GetClient()
 	activity := client.Activity
 
-	curPage := 1
-	options := github.ListOptions{Page: curPage, PerPage: 100}
+	options := github.ListOptions{Page: 1, PerPage: 100}
 
-	Events, _, err := activity.ListEventsPerformedByUser(context.Background(), author, true, &options)
+	Events, resp, err := activity.ListEventsPerformedByUser(context.Background(), author, true, &options)
 	if err != nil {
 		panic(err)
 	}
@@ -61,10 +60,14 @@ func GetEvents(author string, orgMap map[string]bool, startDate time.Time, endDa
 		}
 
 		if i > len(Events) {
+			// the events API is capped at 300 events, NextPage is 0 once the last page is reached
+			if resp == nil || resp.NextPage == 0 {
+				break
+			}
+
 			i = 0
-			curPage++
-			options = github.ListOptions{Page: curPage}
-			Events, _, err = activity.ListEventsPerformedByUser(context.Background(), author, true, &options)
+			options.Page = resp.NextPage
+			Events, resp, err = activity.ListEventsPerformedByUser(context.Background(), author, true, &options)
 			if err != nil {
 				if strings.Contains(err.Error(), "pagination is limited for this resource") {
 					fmt.Printf("GetEvents() error: %s\n", err.Error())
