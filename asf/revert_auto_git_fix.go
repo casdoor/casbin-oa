@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"sync/atomic"
 )
 
 const (
@@ -56,36 +55,17 @@ func RunAutoGitFix() {
 	total := len(repos)
 
 	state := loadFixState()
-	var doneCount int32 = int32(len(state.Done))
-
-	jobs := make(chan string)
-	var wg sync.WaitGroup
-
-	for i := 0; i < 1; i++ {
-		wg.Add(1)
-		go fixWorker(i, jobs, state, total, &doneCount, &wg)
-	}
+	doneCount := len(state.Done)
 
 	for _, repo := range repos {
 		if state.Done[repo] {
 			fmt.Println("⏭️ skip:", repo)
 			continue
 		}
-		jobs <- repo
-	}
-	close(jobs)
 
-	wg.Wait()
-	fmt.Println("🎉 Fix all done")
-}
-
-func fixWorker(id int, jobs <-chan string, state *FixState, total int, doneCount *int32, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	for repo := range jobs {
 		fmt.Println("======================================")
 		fmt.Println("🔗 Repo:", repo)
-		fmt.Println("👉 Press ENTER to continue (Ctrl+C to exit)...")
+		fmt.Println("Ctrl+C to exit...")
 
 		waitEnter()
 
@@ -100,19 +80,20 @@ func fixWorker(id int, jobs <-chan string, state *FixState, total int, doneCount
 		state.markDone(repo)
 		state.save()
 
-		current := atomic.AddInt32(doneCount, 1)
+		doneCount++
 
 		fmt.Printf("✅ [%d/%d] (%.1f%%) Fixed: %s\n",
-			current,
+			doneCount,
 			total,
-			float64(current)/float64(total)*100,
+			float64(doneCount)/float64(total)*100,
 			repo,
 		)
 	}
+
+	fmt.Println("🎉 Fix all done")
 }
 
 func fixRepo(repoURL string) error {
-
 	repoName := filepath.Base(repoURL)
 	localPath := filepath.Join(cloneBaseDir, repoName)
 
@@ -130,10 +111,6 @@ func fixRepo(repoURL string) error {
 	}
 
 	if err := runCmd(localPath, "git", "reset", "--hard", "HEAD~1"); err != nil {
-		return err
-	}
-
-	if err := runCmd(localPath, "git", "push", "origin", "HEAD", "--force"); err != nil {
 		return err
 	}
 
