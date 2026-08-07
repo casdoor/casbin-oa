@@ -79,6 +79,9 @@ func initAPI() {
 	beego.Router("/api/webhook", &controllers.ApiController{}, "Post:WebhookOpen")
 	beego.Router("/api/is-mainland-ip", &controllers.ApiController{}, "GET:IsMainlandIp")
 
+	beego.Router("/api/get-pr-checks", &controllers.ApiController{}, "GET:GetPrChecks")
+	beego.Router("/api/get-pr-check", &controllers.ApiController{}, "GET:GetPrCheck")
+
 	beego.Router("/api/get-machines", &controllers.ApiController{}, "GET:GetMachines")
 	beego.Router("/api/get-machine", &controllers.ApiController{}, "GET:GetMachine")
 	beego.Router("/api/update-machine", &controllers.ApiController{}, "POST:UpdateMachine")
