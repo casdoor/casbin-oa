@@ -37,20 +37,48 @@ func getAddedDate(t time.Time, i int) string {
 func TestAddRounds(t *testing.T) {
 	InitConfig()
 
-	startDate := getDateFromString("2022-08-15")
+	startDate := getDateFromString("2026-08-03")
 
 	now := time.Now()
 	date := now.Format("2006-01-02")
-	date = "2021-09-24"
-	for i := 29; i < 35; i++ {
+	date = "2026-08-03"
+
+	j := 200
+	for i := 0; i < 100; i++ {
 		round := &Round{
-			Owner:       "admin",
-			Name:        fmt.Sprintf("talent2022-week-%d", i),
-			CreatedTime: fmt.Sprintf("%sT00:00:%02d+08:00", date, i),
-			Title:       fmt.Sprintf("第%d周", i),
-			Program:     "talent2022",
+			Owner:       "admin_next",
+			Name:        fmt.Sprintf("talent2023-week-%02d", j),
+			CreatedTime: fmt.Sprintf("%sT00:00:%02d+08:00", date, i+1),
+			Title:       fmt.Sprintf("第%d周", j),
+			Program:     "talent2023",
 			StartDate:   getAddedDate(startDate, 7*i),
 			EndDate:     getAddedDate(startDate, 7*(i+1)),
+		}
+
+		AddRound(round)
+		j += 1
+		fmt.Printf("%v\n", round)
+	}
+}
+
+func TestAddRounds2023(t *testing.T) {
+	InitConfig()
+
+	startDate := getDateFromString("2023-01-16")
+
+	now := time.Now()
+	date := now.Format("2006-01-02")
+	//date = "2022-12-12"
+
+	for i := 80; i < 200; i++ {
+		round := &Round{
+			Owner:       "admin",
+			Name:        fmt.Sprintf("talent2023-week-%02d", i),
+			CreatedTime: fmt.Sprintf("%sT00:00:%02d+08:00", date, i),
+			Title:       fmt.Sprintf("第%d周", i),
+			Program:     "talent2023",
+			StartDate:   getAddedDate(startDate, 7*(i-15)),
+			EndDate:     getAddedDate(startDate, 7*(i-14)),
 		}
 
 		AddRound(round)
