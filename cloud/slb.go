@@ -15,6 +15,8 @@
 package cloud
 
 import (
+	"fmt"
+
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/slb"
 	"github.com/casbin/casbin-oa/util"
 )
@@ -26,13 +28,13 @@ type Server struct {
 	Type     string `json:"Type"`
 }
 
-func GetVsgServerIdMap() map[string]int {
+func GetVsgServerIdMap() (map[string]int, error) {
 	r := slb.CreateDescribeVServerGroupAttributeRequest()
 	r.VServerGroupId = vsgId
 
 	resp, err := slbClient.DescribeVServerGroupAttribute(r)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("GetVsgServerIdMap() error: %s", err.Error())
 	}
 
 	servers := resp.BackendServers.BackendServer
@@ -41,10 +43,10 @@ func GetVsgServerIdMap() map[string]int {
 		id := server.ServerId
 		res[id] = 1
 	}
-	return res
+	return res, nil
 }
 
-func AddServerToSlb(serverId string, port int) {
+func AddServerToSlb(serverId string, port int) error {
 	r := slb.CreateAddVServerGroupBackendServersRequest()
 	r.VServerGroupId = vsgId
 	r.BackendServers = util.StructToJson([]Server{{
@@ -54,11 +56,13 @@ func AddServerToSlb(serverId string, port int) {
 		Type:     "ecs",
 	}})
 
+	var err error
 	for i := 0; i < 100; i++ {
-		_, err := slbClient.AddVServerGroupBackendServers(r)
-		if err != nil {
-			continue
+		_, err = slbClient.AddVServerGroupBackendServers(r)
+		if err == nil {
+			return nil
 		}
-		break
 	}
+
+	return fmt.Errorf("AddServerToSlb() error: server: %s, %s", serverId, err.Error())
 }

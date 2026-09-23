@@ -53,8 +53,16 @@ func getPassedMinutes(creationTime string) int {
 	return int(duration.Minutes())
 }
 
+// doBalance runs one round of the auto-scaling. Any error is logged to the console
+// and to the error log file, and the round is skipped, so the caller can keep running.
 func doBalance() {
-	instances := GetInstances()
+	defer recoverError("doBalance")
+
+	instances, err := GetInstances()
+	if err != nil {
+		logError("%s", err.Error())
+		return
+	}
 	instanceCount := len(instances)
 
 	slbRate := GetSlbPacketRate()
@@ -70,10 +78,17 @@ func doBalance() {
 		fmt.Printf("instance_count: [%d] < target_instance_count: [%d], will add instance..\n", instanceCount, targetInstanceCount)
 
 		newInstanceName := getNewInstanceName(instanceCount)
-		AddInstance(newInstanceName)
+		err = AddInstance(newInstanceName)
+		if err != nil {
+			logError("%s", err.Error())
+		}
 	} else {
 		lastInstanceName := getNewInstanceName(instanceCount - 1)
 		lastInstanceId, lastInstanceCreationTime := getInstanceIdAndCreationTimeFromInstances(instances, lastInstanceName)
+		if lastInstanceId == "" {
+			logError("doBalance() error: instance not found, name = %s", lastInstanceName)
+			return
+		}
 
 		passedMinutes := getPassedMinutes(lastInstanceCreationTime)
 		if passedMinutes < coolDownMinutes {
@@ -81,7 +96,10 @@ func doBalance() {
 		} else {
 			fmt.Printf("instance_count: [%d] > target_instance_count: [%d], will delete instance..\n", instanceCount, targetInstanceCount)
 
-			DeleteInstance(lastInstanceId, lastInstanceName)
+			err = DeleteInstance(lastInstanceId, lastInstanceName)
+			if err != nil {
+				logError("%s", err.Error())
+			}
 		}
 	}
 }

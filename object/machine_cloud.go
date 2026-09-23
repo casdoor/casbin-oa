@@ -56,17 +56,30 @@ func getMachinesFromInstances(instances []ecs.Instance) []*Machine {
 	return machines
 }
 
-func syncImpermanentMachines() {
+func syncImpermanentMachines() error {
 	deleteImpermanentMachines()
-	instances := cloud.GetInstances()
+	instances, err := cloud.GetInstances()
+	if err != nil {
+		return err
+	}
+
 	machines := getMachinesFromInstances(instances)
 	AddMachines(machines)
 
-	serverIdMap := cloud.GetVsgServerIdMap()
+	serverIdMap, err := cloud.GetVsgServerIdMap()
+	if err != nil {
+		return err
+	}
+
 	for _, instance := range instances {
 		serverId := instance.InstanceId
 		if _, ok := serverIdMap[serverId]; !ok {
-			cloud.AddServerToSlb(serverId, 9095)
+			err = cloud.AddServerToSlb(serverId, 9095)
+			if err != nil {
+				return err
+			}
 		}
 	}
+
+	return nil
 }

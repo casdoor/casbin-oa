@@ -23,7 +23,7 @@ import (
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/ecs"
 )
 
-func GetInstances() []ecs.Instance {
+func GetInstances() ([]ecs.Instance, error) {
 	r := ecs.CreateDescribeInstancesRequest()
 	r.InstanceChargeType = "PostPaid"
 	r.PageSize = requests.NewInteger(100)
@@ -38,6 +38,9 @@ func GetInstances() []ecs.Instance {
 		}
 		break
 	}
+	if err != nil {
+		return nil, fmt.Errorf("GetInstances() error: %s", err.Error())
+	}
 
 	instances := resp.Instances.Instance
 	res := []ecs.Instance{}
@@ -47,64 +50,81 @@ func GetInstances() []ecs.Instance {
 		}
 	}
 
-	return res
+	return res, nil
 }
 
-func AddInstance(instanceName string) {
+func AddInstance(instanceName string) error {
 	r := ecs.CreateRunInstancesRequest()
 	r.LaunchTemplateName = "auto"
 
 	resp, err := ecsClient.RunInstances(r)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("AddInstance() error: %s", err.Error())
+	}
+
+	if len(resp.InstanceIdSets.InstanceIdSet) == 0 {
+		return fmt.Errorf("AddInstance() error: no instance created, name = %s", instanceName)
 	}
 
 	instanceId := resp.InstanceIdSets.InstanceIdSet[0]
 
-	renameInstance(instanceId, instanceName)
-	AddServerToSlb(instanceId, 9095)
+	err = renameInstance(instanceId, instanceName)
+	if err != nil {
+		return err
+	}
+
+	err = AddServerToSlb(instanceId, 9095)
+	if err != nil {
+		return err
+	}
 
 	fmt.Printf("1 instance added, name = %s\n", instanceName)
+	return nil
 }
 
-func renameInstanceOnce(r *ecs.ModifyInstanceAttributeRequest) {
+func renameInstanceOnce(r *ecs.ModifyInstanceAttributeRequest) error {
 	time.Sleep(3000 * time.Millisecond)
-	for i := 0; i < 100; i++ {
-		_, err := ecsClient.ModifyInstanceAttribute(r)
-		if err != nil {
-			if i == 99 {
-				panic(err)
-			}
 
-			fmt.Printf("renameInstance() error: %s\n", err.Error())
-			time.Sleep(2000 * time.Millisecond)
-			continue
+	var err error
+	for i := 0; i < 100; i++ {
+		_, err = ecsClient.ModifyInstanceAttribute(r)
+		if err == nil {
+			return nil
 		}
-		break
+
+		fmt.Printf("renameInstance() error: %s\n", err.Error())
+		time.Sleep(2000 * time.Millisecond)
 	}
+
+	return fmt.Errorf("renameInstance() error: instance: %s, %s", r.InstanceId, err.Error())
 }
 
-func renameInstance(instanceId string, instanceName string) {
+func renameInstance(instanceId string, instanceName string) error {
 	r := ecs.CreateModifyInstanceAttributeRequest()
 	r.InstanceId = instanceId
 	r.InstanceName = instanceName
 
-	renameInstanceOnce(r)
-	renameInstanceOnce(r)
-	renameInstanceOnce(r)
+	for i := 0; i < 3; i++ {
+		err := renameInstanceOnce(r)
+		if err != nil {
+			return err
+		}
+	}
 
 	fmt.Printf("instance: %s renamed to: %s\n", instanceId, instanceName)
+	return nil
 }
 
-func DeleteInstance(instanceId string, instanceName string) {
+func DeleteInstance(instanceId string, instanceName string) error {
 	r := ecs.CreateDeleteInstancesRequest()
 	r.InstanceId = &[]string{instanceId}
 	r.Force = requests.NewBoolean(true)
 
 	_, err := ecsClient.DeleteInstances(r)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("DeleteInstance() error: name = %s, id = %s, %s", instanceName, instanceId, err.Error())
 	}
 
 	fmt.Printf("1 instance deleted, name = %s\n", instanceName)
+	return nil
 }

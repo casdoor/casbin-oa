@@ -72,5 +72,8 @@ func TestDeployMachineService(t *testing.T) {
 func TestSyncImpermanentMachines(t *testing.T) {
 	InitConfig()
 
-	syncImpermanentMachines()
+	err := syncImpermanentMachines()
+	if err != nil {
+		t.Fatal(err)
+	}
 }

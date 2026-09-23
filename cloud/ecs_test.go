@@ -20,6 +20,10 @@ import (
 )
 
 func TestGetInstances(t *testing.T) {
-	instances := GetInstances()
+	instances, err := GetInstances()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	fmt.Printf("%v\n", instances)
 }

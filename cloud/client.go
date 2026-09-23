@@ -33,7 +33,8 @@ func init() {
 func initEcsClient() *ecs.Client {
 	client, err := ecs.NewClientWithAccessKey(regionId, accessKeyId, accessKeySecret)
 	if err != nil {
-		panic(err)
+		logError("initEcsClient() error: %s", err.Error())
+		return nil
 	}
 
 	return client
@@ -42,7 +43,8 @@ func initEcsClient() *ecs.Client {
 func initSlbClient() *slb.Client {
 	client, err := slb.NewClientWithAccessKey(regionId, accessKeyId, accessKeySecret)
 	if err != nil {
-		panic(err)
+		logError("initSlbClient() error: %s", err.Error())
+		return nil
 	}
 
 	return client
@@ -51,7 +53,8 @@ func initSlbClient() *slb.Client {
 func initCmsClient() *cms.Client {
 	client, err := cms.NewClientWithAccessKey(regionId, accessKeyId, accessKeySecret)
 	if err != nil {
-		panic(err)
+		logError("initCmsClient() error: %s", err.Error())
+		return nil
 	}
 
 	return client
