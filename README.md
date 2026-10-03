@@ -73,7 +73,7 @@ Casdoor instance.
 #### Setup your forum to enable some third-party login platform
 
 Casbin-OA uses Casdoor to manage members. If you want to log in with oauth, you should
-see [casdoor oauth configuration](https://casdoor.org/docs/provider/oauth/overview/).
+see [casdoor oauth configuration](https://casdoor.ai/docs/provider/oauth/overview/).
 
 #### OSS, Mail, and SMS services
 
