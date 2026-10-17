@@ -16,6 +16,8 @@ package cloud
 
 import (
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/cms"
 	"github.com/casbin/casbin-oa/util"
@@ -34,6 +36,47 @@ type Datapoint struct {
 	Minimum    float64 `json:"Minimum"`
 	Average    float64 `json:"Average"`
 	Sum        float64 `json:"Sum"`
+}
+
+func GetSlbQps() float64 {
+	now := time.Now()
+	r := cms.CreateDescribeMetricListRequest()
+	r.MetricName = "InstanceQps"
+	r.Period = "60"
+	r.StartTime = strconv.FormatInt(now.Add(-time.Duration(qpsWindowMinutes+2)*time.Minute).UnixMilli(), 10)
+	r.EndTime = strconv.FormatInt(now.UnixMilli(), 10)
+	r.Dimensions = util.StructToJson([]Dimension{{InstanceId: slbId}})
+	r.Namespace = "acs_slb_dashboard"
+
+	resp, err := cmsClient.DescribeMetricList(r)
+	if err != nil {
+		logError("GetSlbQps() error: %s", err.Error())
+		return -1
+	}
+
+	var datapoints []Datapoint
+	err = util.JsonToStruct(resp.Datapoints, &datapoints)
+	if err != nil {
+		logError("GetSlbQps() error: %s", err.Error())
+		return -1
+	}
+
+	if len(datapoints) <= 0 {
+		return -1
+	}
+
+	if len(datapoints) > qpsWindowMinutes {
+		datapoints = datapoints[len(datapoints)-qpsWindowMinutes:]
+	}
+
+	sum := 0.0
+	for _, datapoint := range datapoints {
+		sum += datapoint.Average
+	}
+	res := sum / float64(len(datapoints))
+	fmt.Printf("[%s] SLB QPS = %.1f (average of last %d minutes)\n", util.GetCurrentTimeFormatted(), res, len(datapoints))
+
+	return res
 }
 
 func GetSlbPacketRate() int {

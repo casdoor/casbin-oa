@@ -22,15 +22,12 @@ import (
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/ecs"
 )
 
-func getTargetInstanceCount(slbRate int) int {
-	res := int(math.Floor(float64(slbRate-1)/60.0)) + 1
-
-	res = res - 3
+func getTargetInstanceCount(slbQps float64) int {
+	res := int(math.Ceil((slbQps - baseQps) / qpsPerInstance))
 	if res < 0 {
 		res = 0
 	}
 
-	//fmt.Printf("target instance count = %d\n", res)
 	return res
 }
 
@@ -65,13 +62,16 @@ func doBalance() {
 	}
 	instanceCount := len(instances)
 
-	slbRate := GetSlbPacketRate()
-	//slbRate = 60
-	if slbRate == -1 {
+	slbQps := GetSlbQps()
+	if slbQps < 0 {
 		return
 	}
 
-	targetInstanceCount := getTargetInstanceCount(slbRate) + 5
+	targetInstanceCount := getTargetInstanceCount(slbQps) + 0
+	if targetInstanceCount > maxInstanceCount {
+		fmt.Printf("target_instance_count: [%d] capped to max_instance_count: [%d]\n", targetInstanceCount, maxInstanceCount)
+		targetInstanceCount = maxInstanceCount
+	}
 	if instanceCount == targetInstanceCount {
 		fmt.Printf("instance_count: [%d] == target_instance_count: [%d], no change\n", instanceCount, targetInstanceCount)
 	} else if instanceCount < targetInstanceCount {

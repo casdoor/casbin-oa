@@ -21,3 +21,7 @@ var accessKeySecret = ""
 var vsgId = ""
 var slbId = ""
 var coolDownMinutes = 10
+var baseQps = 15.0
+var qpsPerInstance = 15.0
+var qpsWindowMinutes = 3
+var maxInstanceCount = 60
